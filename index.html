@@ -335,7 +335,7 @@
         <!-- 置頂 PDF 尋找列與快捷商店膠囊（展開與收合皆永遠固定懸浮在導覽列下方） -->
       <div id="ccStickySearchWrapper" class="relative z-30">
         <!-- 展開時的自動佔位空間（避免大搜尋框遮住第一張信用卡，收合時會自動隱藏縮為 0） -->
-        <div id="ccSearchSpacer" class="h-[138px] sm:h-[108px] transition-all"></div>
+        <div id="ccSearchSpacer" class="h-[150px] sm:h-[108px] transition-all"></div>
 
         <!-- 【狀態 A：展開中的完整搜尋卡片（fixed 永遠跟著畫面往下滑）】 -->
         <div id="ccSearchExpandedCard" class="fixed top-[116px] sm:top-[120px] left-3 right-3 sm:left-6 sm:right-6 z-30 storybook-card p-3 sm:p-4 bg-woodcard/95 backdrop-blur-md border-2 border-maple/40 shadow-lg space-y-2.5">
@@ -415,6 +415,19 @@
           </div>
         </div>
 
+          <!-- 🏆 Top 3 最高回饋神卡自動推薦看板（輸入關鍵字時自動顯示） -->
+          <div id="ccTop3Board" class="hidden pt-2 border-t border-woodBorder/80">
+            <div class="flex items-center justify-between mb-1.5">
+              <span id="ccTop3Title" class="text-[11px] sm:text-xs font-bold text-maple">
+                🏆 最佳回饋神卡排行
+              </span>
+              <span class="text-[10px] text-inkMuted">點擊卡片可跳轉明細</span>
+            </div>
+            <div id="ccTop3Cards" class="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
+              <!-- 由 JS 動態生成 🥇第1名、🥈第2名、🥉第3名卡片 -->
+            </div>
+          </div>
+        
         <!-- 【狀態 B：收合後的迷你懸浮膠囊（幾乎不遮擋下方表格）】 -->
           <!-- 【狀態 B：收合後的迷你懸浮膠囊（改用 fixed 確保往下滑永遠固定在螢幕右上角）】 -->
           <div id="ccSearchCollapsedBar" class="hidden fixed top-[116px] sm:top-[120px] right-3 sm:right-6 z-30 flex items-center justify-end gap-1.5">
@@ -4948,6 +4961,216 @@
         conditions: '• 結帳前須開啟 VISA 日本旅遊專屬優惠網頁出示對應通路條碼／優惠券，並使用台灣發行之 VISA 信用卡結帳\n• 鶴羽藥妝（Tsuruha）同時為「日本免稅新制零手續費首選通路」，搭配 VISA 滿 2 萬折 2 千優惠最划算！'
       }
     ];
+    
+    // 11 張信用卡智慧評分規則庫（用於自動計算指定通路與通用消費 Top 3 排行）
+    const CREDIT_CARD_RANK_RULES = [
+      {
+        id: 'cc-10',
+        shortName: '所有 JCB 卡 (不限銀行)',
+        rateScore: 30,
+        rateLabel: '最高 30%（指定餐廳）/ 20%（福岡三越・岩田屋）',
+        note: '福岡三越/岩田屋滿5萬日圓享20%；博多指定3餐廳享30%',
+        specificKeywords: ['福岡三越', '三越', '岩田屋', 'とめ手羽', 'しらすくじら', '焼膳', '機場貴賓室', '貴賓室'],
+        isGeneralJapan: false
+      },
+      {
+        id: 'cc-1',
+        shortName: '台新 Richart 卡 (VISA)',
+        rateScore: 11.5,
+        rateLabel: '最高 11.5%（超額 5.3% 無上限）',
+        note: 'Pay著刷方案（6.2%加碼上限50點/季，超過享5.3%無上限）',
+        specificKeywords: ['pay著刷', 'paypay', '單筆滿3000'],
+        isGeneralJapan: true
+      },
+      {
+        id: 'cc-11',
+        shortName: '所有 VISA 卡 (不限銀行)',
+        rateScore: 10,
+        rateLabel: '滿 2 萬日圓折 2,000（約 10%）',
+        note: 'COSMOS・鶴羽藥妝・杉藥局・國民藥妝・EDION 出示條碼',
+        specificKeywords: ['cosmos', '科摩思', '鶴羽', 'ツルハ', '杉藥局', '國民藥妝', '愛電王', 'edion', '藥妝'],
+        isGeneralJapan: false
+      },
+      {
+        id: 'cc-4',
+        shortName: '永豐現金回饋 JCB 卡',
+        rateScore: 10,
+        rateLabel: '滿萬最高 10%（一般 5%）',
+        note: '日韓泰實體面對面刷卡加碼+5%（需搶登錄，季上限1000）',
+        specificKeywords: ['日韓泰', '面對面'],
+        isGeneralJapan: true
+      },
+      {
+        id: 'cc-8',
+        shortName: '台北富邦 J 卡 (JCB)',
+        rateScore: 10,
+        rateLabel: '交通卡 10%｜實體刷滿千 6%',
+        note: 'Apple Pay儲值Suica/ICOCA 10%；實體單筆滿千6%（需登錄）',
+        specificKeywords: ['suica', '西瓜卡', 'icoca', 'pasmo', '交通卡', 'apple pay'],
+        isGeneralJapan: true
+      },
+      {
+        id: 'cc-6',
+        shortName: '玉山熊本熊卡 (JCB)',
+        rateScore: 8.5,
+        rateLabel: '指定通路 8.5%（PayPay 5%）',
+        note: '勝烈亭・星野・九州自然動物園・唐吉・一蘭・藥妝・UNIQLO等+6%',
+        specificKeywords: [
+          'suica', 'icoca', 'pasmo', '交通卡', '租車', 'toyota', 'times', 'nippon', 'ots', 'orix', 'budget',
+          'jr', 'jal', '日本航空', '東橫', '星野', 'omo5', 'risonare', 'prince', '樂園', '自然動物園', '非洲獅', 'safari',
+          '勝烈亭', '敘敘苑', '牛角', '力丸', '六歌仙', 'shake shack', 'doutor', 'fuglen', '鳥貴族',
+          '一蘭', '松屋', 'sukiya', '壽司郎', '藏壽司', '人形町', 'biccamera', 'yodobashi',
+          '松本清', '唐吉', '大國', '無印', 'muji', 'mitsui', 'lalaport', 'uniqlo', 'gu', 'montbell', 'alpen', 'paypay'
+        ],
+        isGeneralJapan: true,
+        generalRateScore: 2.5,
+        generalRateLabel: '日本一般消費 2.5% 無上限'
+      },
+      {
+        id: 'cc-5',
+        shortName: '聯邦吉鶴卡 (JCB)',
+        rateScore: 8,
+        rateLabel: '指定 11 大通路最高 8%',
+        note: '唐吉・BIC CAMERA・三越・7-11・全家・LAWSON・AEON（日幣請款）',
+        specificKeywords: [
+          '7-eleven', '7-11', 'familymart', '全家', 'lawson', '超商', '迪士尼', '環球影城', 'usj',
+          'aeon', '永旺', '三越', '福岡三越', '高島屋', 'bic', 'yodobashi', '唐吉', 'apple pay', 'google pay', 'quicpay'
+        ],
+        isGeneralJapan: true,
+        generalRateScore: 5,
+        generalRateLabel: '感應支付最高 5%（實體 2.5% 無上限）'
+      },
+      {
+        id: 'cc-3',
+        shortName: '永豐幣倍卡 (MASTER)',
+        rateScore: 6,
+        rateLabel: '日本實體 & 交通卡最高 6%',
+        note: '懂匯等級＋外幣自動扣繳（加碼上限800元/月，刷2萬額滿）',
+        specificKeywords: ['suica', '西瓜卡', 'icoca', 'pasmo', '交通卡', 'apple pay'],
+        isGeneralJapan: true
+      },
+      {
+        id: 'cc-2',
+        shortName: '永豐大戶卡 (VISA)',
+        rateScore: 4.5,
+        rateLabel: '日本實體消費最高 4.5%',
+        note: '大戶等級＋自動扣繳（加碼2.5%上限400元/月，刷1.6萬額滿）',
+        specificKeywords: [],
+        isGeneralJapan: true
+      },
+      {
+        id: 'cc-7',
+        shortName: '玉山 Unicard (VISA)',
+        rateScore: 4.5,
+        rateLabel: 'UP 選方案 4.5% 無上限',
+        note: '需於 Wallet 訂閱/切換「UP 選」，大額消費無上限主力卡',
+        specificKeywords: [],
+        isGeneralJapan: true
+      },
+      {
+        id: 'cc-9',
+        shortName: '國泰世華 CUBE 卡 (VISA)',
+        rateScore: 3,
+        rateLabel: '「趣旅行」3% 小樹點無上限',
+        note: '免登錄無上限，當天 App 務必切換至「趣旅行」（含星野/東橫/交通卡）',
+        specificKeywords: ['星野', '東橫', 'suica', 'icoca', 'pasmo', 'uber', '迪士尼', '環球影城'],
+        isGeneralJapan: true
+      }
+    ];
+
+    function scrollToCreditCardRow(cardId) {
+      const row = document.getElementById(cardId);
+      if (!row) return;
+      document.querySelectorAll('#ccTableBody tr.cc-row-active').forEach((tr) => {
+        tr.classList.remove('cc-row-active');
+      });
+      row.classList.add('cc-row-active');
+      row.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+    }
+
+    function renderTop3CreditCards(rawKeyword) {
+      const board = document.getElementById('ccTop3Board');
+      const cardsContainer = document.getElementById('ccTop3Cards');
+      const titleEl = document.getElementById('ccTop3Title');
+      if (!board || !cardsContainer) return;
+
+      const kw = (rawKeyword || '').trim().toLowerCase();
+      if (!kw) {
+        board.classList.add('hidden');
+        return;
+      }
+
+      // 計算每張卡針對當前搜尋關鍵字的適用分數
+      const scoredList = [];
+      CREDIT_CARD_RANK_RULES.forEach((rule) => {
+        const cardObj = creditCardData.find((c) => c.id === rule.id);
+        const fullText = cardObj
+          ? `${cardObj.cardName} ${cardObj.merchants} ${cardObj.rewards} ${cardObj.conditions}`.toLowerCase()
+          : '';
+
+        // 檢查是否命中該卡的「專屬指定通路關鍵字」或表格內文直接包含該店名
+        const hitSpecificRule = rule.specificKeywords.some((s) => kw.includes(s) || s.includes(kw));
+        const hitTableText = fullText.includes(kw);
+
+        if (hitSpecificRule || hitTableText) {
+          scoredList.push({
+            id: rule.id,
+            shortName: rule.shortName,
+            score: rule.rateScore,
+            rateLabel: rule.rateLabel,
+            note: rule.note,
+            tag: '指定／命中優惠'
+          });
+        } else if (rule.isGeneralJapan) {
+          // 未命中專屬通路時，納入日本實體一般消費通用卡（確保任何店名都能排出 Top 3）
+          scoredList.push({
+            id: rule.id,
+            shortName: rule.shortName,
+            score: rule.generalRateScore !== undefined ? rule.generalRateScore : rule.rateScore,
+            rateLabel: rule.generalRateLabel || rule.rateLabel,
+            note: rule.note,
+            tag: '日本一般實體通用'
+          });
+        }
+      });
+
+      // 依回饋趴數由高到低排序，取前 3 名
+      scoredList.sort((a, b) => b.score - a.score);
+      const top3 = scoredList.slice(0, 3);
+
+      if (titleEl) {
+        titleEl.textContent = `🏆 搜尋「${rawKeyword.trim()}」推薦神卡 Top 3`;
+      }
+
+      const medals = [
+        { icon: '🥇 最高', border: 'border-amber-400 bg-amber-50/90', badge: 'bg-amber-500 text-white' },
+        { icon: '🥈 第二', border: 'border-stone-300 bg-parchment/90', badge: 'bg-stone-500 text-white' },
+        { icon: '🥉 第三', border: 'border-orange-300 bg-orange-50/70', badge: 'bg-orange-600 text-white' }
+      ];
+
+      cardsContainer.innerHTML = top3
+        .map((item, idx) => {
+          const m = medals[idx];
+          return `
+            <button
+              type="button"
+              onclick="scrollToCreditCardRow('${item.id}')"
+              class="text-left p-2 rounded-xl border ${m.border} hover:shadow-sm active:scale-[0.98] transition flex flex-col justify-between gap-0.5"
+            >
+              <div class="flex items-center justify-between gap-1">
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md ${m.badge}">${m.icon}</span>
+                <span class="text-[10px] font-semibold text-inkMuted truncate">${item.tag}</span>
+              </div>
+              <div class="text-xs font-bold text-ink truncate mt-0.5">${escapeHtml(item.shortName)}</div>
+              <div class="text-[11px] font-extrabold text-maple leading-tight">${escapeHtml(item.rateLabel)}</div>
+              <div class="text-[10px] text-inkMuted line-clamp-1">${escapeHtml(item.note)}</div>
+            </button>
+          `;
+        })
+        .join('');
+
+      board.classList.remove('hidden');
+    }
 
     let ccSearchState = {
       keyword: '',
@@ -5021,6 +5244,7 @@
 
       renderCreditCardQuickChips();
       renderCreditCardTable();
+      renderTop3CreditCards(rawKeyword);
 
       // 蒐集所有標記出的 <mark class="cc-highlight"> 元素
       const marks = Array.from(document.querySelectorAll('#ccTableBody mark.cc-highlight'));

@@ -334,11 +334,9 @@
 
       <!-- 置頂 PDF 尋找列與快捷商店膠囊（展開與收合皆永遠固定懸浮在導覽列下方） -->
       <div id="ccStickySearchWrapper" class="relative z-30">
-        <!-- 展開時的自動佔位空間（避免大搜尋框遮住第一張信用卡，收合時會自動隱藏縮為 0） -->
-        <div id="ccSearchSpacer" class="h-[155px] sm:h-[115px] transition-all"></div>
 
         <!-- 【狀態 A：展開中的完整搜尋卡片（fixed 永遠跟著畫面往下滑）】 -->
-        <div id="ccSearchExpandedCard" class="fixed top-[116px] sm:top-[120px] left-3 right-3 sm:left-6 sm:right-6 z-30 storybook-card p-3 sm:p-4 bg-woodcard/95 backdrop-blur-md border-2 border-maple/40 shadow-lg space-y-2.5">
+        <div id="ccSearchExpandedCard" class="hidden fixed top-[116px] sm:top-[120px] left-3 right-3 sm:left-6 sm:right-6 z-30 storybook-card p-3 sm:p-4 bg-woodcard/95 backdrop-blur-md border-2 border-maple/40 shadow-lg space-y-2.5">
           <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <!-- 搜尋輸入框 + 一鍵清除按鈕 -->
             <div class="relative flex-1">
@@ -428,7 +426,7 @@
         </div>
 
           <!-- 【狀態 B：收合後的迷你懸浮膠囊（支援手機手指自由拖曳移動位置）】 -->
-        <div id="ccSearchCollapsedBar" class="hidden fixed top-[116px] right-3 z-30 flex items-center gap-1.5 touch-none select-none cursor-grab active:cursor-grabbing">
+        <div id="ccSearchCollapsedBar" class="fixed top-[116px] right-3 z-30 flex items-center gap-1.5 touch-none select-none cursor-grab active:cursor-grabbing">
           <!-- 拖曳小把手提示 -->
           <span class="px-1.5 py-1 rounded-full bg-woodcard/90 border border-woodBorder shadow text-[11px] font-bold text-inkMuted" title="按住可自由拖曳位置">
             ⋮⋮
@@ -5262,6 +5260,7 @@ function renderTop3CreditCards(rawKeyword) {
 
       renderCreditCardQuickChips();
       renderCreditCardTable();
+      initDraggableCollapsedBar();
       renderTop3CreditCards(rawKeyword);
 
       // 蒐集所有標記出的 <mark class="cc-highlight"> 元素

@@ -5547,6 +5547,9 @@ function renderTop3CreditCards(rawKeyword) {
        ========================================================================== */
     function switchTab(tabName) {
       state.activeTab = tabName;
+      if (tabName === 'creditcard' && typeof initDraggableCollapsedBar === 'function') {
+        initDraggableCollapsedBar();
+      }
       const tabs = ['itinerary', 'creditcard', 'expenses', 'weather', 'taxfree'];
 
       tabs.forEach((t) => {

@@ -1,0 +1,22 @@
+{
+  "name": "2026 九州 11 日賞楓手札",
+  "short_name": "九州賞楓",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#FAF6F0",
+  "theme_color": "#C84B31",
+  "icons": [
+    {
+      "src": "./icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

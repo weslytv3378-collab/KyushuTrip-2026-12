@@ -413,8 +413,8 @@
         </div>
 
         <!-- 【狀態 B：收合後的迷你懸浮膠囊（幾乎不遮擋下方表格）】 -->
-                <!-- 【狀態 B：收合後的迷你懸浮膠囊（支援直接切換上/下一筆，展開才能輸入新搜尋）】 -->
-        <div id="ccSearchCollapsedBar" class="hidden flex items-center justify-end gap-1.5">
+          <!-- 【狀態 B：收合後的迷你懸浮膠囊（改用 fixed 確保往下滑永遠固定在螢幕右上角）】 -->
+          <div id="ccSearchCollapsedBar" class="hidden fixed top-[116px] sm:top-[120px] right-3 sm:right-6 z-30 flex items-center justify-end gap-1.5">
           <!-- 有搜尋結果時才顯示的「筆數 + ▲ / ▼ 迷你切換控制組」 -->
           <div id="ccCollapsedNavGroup" class="hidden inline-flex items-center gap-1 px-2 py-1 rounded-full bg-woodcard/95 backdrop-blur-md border-2 border-amber-400 shadow-md">
             <span id="ccCollapsedCounter" class="text-[11px] font-bold text-amber-950 px-1.5">

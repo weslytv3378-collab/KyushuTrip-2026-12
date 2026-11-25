@@ -332,11 +332,14 @@
         </div>
       </div>
 
-      <!-- 置頂 (Sticky) PDF 尋找列與快捷商店膠囊（支援一鍵收合／展開） -->
-        <div id="ccStickySearchWrapper" class="relative z-20 transition-all">
+        <!-- 置頂 PDF 尋找列與快捷商店膠囊（展開與收合皆永遠固定懸浮在導覽列下方） -->
+      <div id="ccStickySearchWrapper" class="relative z-30">
+        <!-- 展開時的自動佔位空間（避免大搜尋框遮住第一張信用卡，收合時會自動隱藏縮為 0） -->
+        <div id="ccSearchSpacer" class="h-[138px] sm:h-[108px] transition-all"></div>
 
-        <!-- 【狀態 A：展開中的完整搜尋卡片】 -->
-        <div id="ccSearchExpandedCard" class="storybook-card p-3 sm:p-4 bg-woodcard/95 backdrop-blur-md border-2 border-maple/35 shadow-md space-y-2.5">
+        <!-- 【狀態 A：展開中的完整搜尋卡片（fixed 永遠跟著畫面往下滑）】 -->
+        <div id="ccSearchExpandedCard" class="fixed top-[116px] sm:top-[120px] left-3 right-3 sm:left-6 sm:right-6 z-30 storybook-card p-3 sm:p-4 bg-woodcard/95 backdrop-blur-md border-2 border-maple/40 shadow-lg space-y-2.5">
+
           <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <!-- 搜尋輸入框 + 一鍵清除按鈕 -->
             <div class="relative flex-1">
@@ -5112,15 +5115,18 @@
     function toggleCreditCardSearchBar(shouldCollapse) {
       const expandedCard = document.getElementById('ccSearchExpandedCard');
       const collapsedBar = document.getElementById('ccSearchCollapsedBar');
+      const spacer = document.getElementById('ccSearchSpacer');
       if (!expandedCard || !collapsedBar) return;
 
       if (shouldCollapse) {
         expandedCard.classList.add('hidden');
+        if (spacer) spacer.classList.add('hidden');
         collapsedBar.classList.remove('hidden');
         syncCollapsedSearchBarUI();
       } else {
         collapsedBar.classList.add('hidden');
         expandedCard.classList.remove('hidden');
+        if (spacer) spacer.classList.remove('hidden');
       }
     }
 

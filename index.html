@@ -5110,7 +5110,7 @@
       row.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
     }
 
-    function renderTop3CreditCards(rawKeyword) {
+function renderTop3CreditCards(rawKeyword) {
       const board = document.getElementById('ccTop3Board');
       const cardsContainer = document.getElementById('ccTop3Cards');
       const titleEl = document.getElementById('ccTop3Title');
@@ -5158,78 +5158,6 @@
 
       if (titleEl) {
         titleEl.textContent = `🏆 搜尋「${rawKeyword.trim()}」無低消＆高上限 Top 3`;
-      }
-
-      const medals = [
-        { icon: '🥇 最高', border: 'border-amber-400 bg-amber-50/90', badge: 'bg-amber-500 text-white' },
-        { icon: '🥈 第二', border: 'border-stone-300 bg-parchment/90', badge: 'bg-stone-500 text-white' },
-        { icon: '🥉 第三', border: 'border-orange-300 bg-orange-50/70', badge: 'bg-orange-600 text-white' }
-      ];
-
-      cardsContainer.innerHTML = top3
-        .map((item, idx) => {
-          const m = medals[idx];
-          return `
-            <button
-              type="button"
-              onclick="scrollToCreditCardRow('${item.id}')"
-              class="text-left p-2 rounded-xl border ${m.border} hover:shadow-sm active:scale-[0.98] transition flex flex-col justify-between gap-0.5"
-            >
-              <div class="flex items-center justify-between gap-1">
-                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md ${m.badge}">${m.icon}</span>
-                <span class="text-[10px] font-semibold text-inkMuted truncate">${item.tag}</span>
-              </div>
-              <div class="text-xs font-bold text-ink truncate mt-0.5">${escapeHtml(item.shortName)}</div>
-              <div class="text-[11px] font-extrabold text-maple leading-tight">${escapeHtml(item.rateLabel)}</div>
-              <div class="text-[10px] text-inkMuted line-clamp-1">${escapeHtml(item.note)}</div>
-            </button>
-          `;
-        })
-        .join('');
-
-      board.classList.remove('hidden');
-    }
-
-      // 計算每張卡針對當前搜尋關鍵字的適用分數
-      const scoredList = [];
-      CREDIT_CARD_RANK_RULES.forEach((rule) => {
-        const cardObj = creditCardData.find((c) => c.id === rule.id);
-        const fullText = cardObj
-          ? `${cardObj.cardName} ${cardObj.merchants} ${cardObj.rewards} ${cardObj.conditions}`.toLowerCase()
-          : '';
-
-        // 檢查是否命中該卡的「專屬指定通路關鍵字」或表格內文直接包含該店名
-        const hitSpecificRule = rule.specificKeywords.some((s) => kw.includes(s) || s.includes(kw));
-        const hitTableText = fullText.includes(kw);
-
-        if (hitSpecificRule || hitTableText) {
-          scoredList.push({
-            id: rule.id,
-            shortName: rule.shortName,
-            score: rule.rateScore,
-            rateLabel: rule.rateLabel,
-            note: rule.note,
-            tag: '指定／命中優惠'
-          });
-        } else if (rule.isGeneralJapan) {
-          // 未命中專屬通路時，納入日本實體一般消費通用卡（確保任何店名都能排出 Top 3）
-          scoredList.push({
-            id: rule.id,
-            shortName: rule.shortName,
-            score: rule.generalRateScore !== undefined ? rule.generalRateScore : rule.rateScore,
-            rateLabel: rule.generalRateLabel || rule.rateLabel,
-            note: rule.note,
-            tag: '日本一般實體通用'
-          });
-        }
-      });
-
-      // 依回饋趴數由高到低排序，取前 3 名
-      scoredList.sort((a, b) => b.score - a.score);
-      const top3 = scoredList.slice(0, 3);
-
-      if (titleEl) {
-        titleEl.textContent = `🏆 搜尋「${rawKeyword.trim()}」推薦神卡 Top 3`;
       }
 
       const medals = [

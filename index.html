@@ -427,8 +427,12 @@
           </div>
         </div>
 
-        <!-- 【狀態 B：收合後的迷你懸浮膠囊（改用 fixed 確保往下滑永遠固定在螢幕右上角）】 -->
-        <div id="ccSearchCollapsedBar" class="hidden fixed top-[116px] sm:top-[120px] right-3 sm:right-6 z-30 flex items-center justify-end gap-1.5">
+          <!-- 【狀態 B：收合後的迷你懸浮膠囊（支援手機手指自由拖曳移動位置）】 -->
+        <div id="ccSearchCollapsedBar" class="hidden fixed top-[116px] right-3 z-30 flex items-center gap-1.5 touch-none select-none cursor-grab active:cursor-grabbing">
+          <!-- 拖曳小把手提示 -->
+          <span class="px-1.5 py-1 rounded-full bg-woodcard/90 border border-woodBorder shadow text-[11px] font-bold text-inkMuted" title="按住可自由拖曳位置">
+            ⋮⋮
+          </span>
           <!-- 有搜尋結果時才顯示的「筆數 + ▲ / ▼ 迷你切換控制組」 -->
           <div id="ccCollapsedNavGroup" class="hidden inline-flex items-center gap-1 px-2 py-1 rounded-full bg-woodcard/95 backdrop-blur-md border-2 border-amber-400 shadow-md">
             <span id="ccCollapsedCounter" class="text-[11px] font-bold text-amber-950 px-1.5">
@@ -4961,66 +4965,47 @@
       }
     ];
     
-    // 11 張信用卡智慧評分規則庫（用於自動計算指定通路與通用消費 Top 3 排行）
+    // 11 張信用卡智慧評分規則庫（已排除「低消門檻」及「上限低於150元/點」之加碼）
     const CREDIT_CARD_RANK_RULES = [
       {
         id: 'cc-10',
         shortName: '所有 JCB 卡 (不限銀行)',
+        // 僅保留無低消且上限5,000日圓(≥150元)的博多指定3餐廳30%；福岡三越/岩田屋因有「滿5萬日圓」低消故設 hasMinSpend: true 排除
         rateScore: 30,
-        rateLabel: '最高 30%（指定餐廳）/ 20%（福岡三越・岩田屋）',
-        note: '福岡三越/岩田屋滿5萬日圓享20%；博多指定3餐廳享30%',
-        specificKeywords: ['福岡三越', '三越', '岩田屋', 'とめ手羽', 'しらすくじら', '焼膳', '機場貴賓室', '貴賓室'],
+        rateLabel: '博多指定 3 餐廳享 30% 回饋',
+        note: '九州名物とめ手羽博多築紫口店・しらすくじら・サットン焼膳博多（無低消，上限5,000日圓）',
+        specificKeywords: ['とめ手羽', 'しらすくじら', '焼膳'],
+        hasMinSpend: false,
         isGeneralJapan: false
-      },
-      {
-        id: 'cc-1',
-        shortName: '台新 Richart 卡 (VISA)',
-        rateScore: 11.5,
-        rateLabel: '最高 11.5%（超額 5.3% 無上限）',
-        note: 'Pay著刷方案（6.2%加碼上限50點/季，超過享5.3%無上限）',
-        specificKeywords: ['pay著刷', 'paypay', '單筆滿3000'],
-        isGeneralJapan: true
-      },
-      {
-        id: 'cc-11',
-        shortName: '所有 VISA 卡 (不限銀行)',
-        rateScore: 10,
-        rateLabel: '滿 2 萬日圓折 2,000（約 10%）',
-        note: 'COSMOS・鶴羽藥妝・杉藥局・國民藥妝・EDION 出示條碼',
-        specificKeywords: ['cosmos', '科摩思', '鶴羽', 'ツルハ', '杉藥局', '國民藥妝', '愛電王', 'edion', '藥妝'],
-        isGeneralJapan: false
-      },
-      {
-        id: 'cc-4',
-        shortName: '永豐現金回饋 JCB 卡',
-        rateScore: 10,
-        rateLabel: '滿萬最高 10%（一般 5%）',
-        note: '日韓泰實體面對面刷卡加碼+5%（需搶登錄，季上限1000）',
-        specificKeywords: ['日韓泰', '面對面'],
-        isGeneralJapan: true
       },
       {
         id: 'cc-8',
         shortName: '台北富邦 J 卡 (JCB)',
+        // Apple Pay儲值交通卡10%無低消且上限200元(≥150元)；一般實體商店因6%需「單筆滿NT$1,000」低消，故一般消費僅採計無低消的3%
         rateScore: 10,
-        rateLabel: '交通卡 10%｜實體刷滿千 6%',
-        note: 'Apple Pay儲值Suica/ICOCA 10%；實體單筆滿千6%（需登錄）',
-        specificKeywords: ['suica', '西瓜卡', 'icoca', 'pasmo', '交通卡', 'apple pay'],
-        isGeneralJapan: true
+        rateLabel: 'Apple Pay 儲值交通卡 10%',
+        note: 'Apple Pay 儲值 Suica / PASMO / ICOCA 最高 10%（上限200元/季，需登錄）',
+        specificKeywords: ['suica', '西瓜卡', 'icoca', 'pasmo', '交通卡'],
+        hasMinSpend: false,
+        isGeneralJapan: true,
+        generalRateScore: 3,
+        generalRateLabel: '日本一般消費 3% 無上限（實體6%需滿千已排除）'
       },
       {
         id: 'cc-6',
         shortName: '玉山熊本熊卡 (JCB)',
+        // 指定通路8.5%(上限500元/月 ≥150元)納入；玉山Wallet掃PayPay因每季上限僅100元(<150元)已自指定高回饋排除
         rateScore: 8.5,
-        rateLabel: '指定通路 8.5%（PayPay 5%）',
-        note: '勝烈亭・星野・九州自然動物園・唐吉・一蘭・藥妝・UNIQLO等+6%',
+        rateLabel: '指定通路 8.5%（上限500元/月）',
+        note: '勝烈亭・星野・九州非洲獅樂園・唐吉・一蘭・藥妝・UNIQLO等+6%（無低消）',
         specificKeywords: [
           'suica', 'icoca', 'pasmo', '交通卡', '租車', 'toyota', 'times', 'nippon', 'ots', 'orix', 'budget',
           'jr', 'jal', '日本航空', '東橫', '星野', 'omo5', 'risonare', 'prince', '樂園', '自然動物園', '非洲獅', 'safari',
           '勝烈亭', '敘敘苑', '牛角', '力丸', '六歌仙', 'shake shack', 'doutor', 'fuglen', '鳥貴族',
           '一蘭', '松屋', 'sukiya', '壽司郎', '藏壽司', '人形町', 'biccamera', 'yodobashi',
-          '松本清', '唐吉', '大國', '無印', 'muji', 'mitsui', 'lalaport', 'uniqlo', 'gu', 'montbell', 'alpen', 'paypay'
+          '松本清', '唐吉', '大國', '無印', 'muji', 'mitsui', 'lalaport', 'uniqlo', 'gu', 'montbell', 'alpen'
         ],
+        hasMinSpend: false,
         isGeneralJapan: true,
         generalRateScore: 2.5,
         generalRateLabel: '日本一般消費 2.5% 無上限'
@@ -5030,11 +5015,12 @@
         shortName: '聯邦吉鶴卡 (JCB)',
         rateScore: 8,
         rateLabel: '指定 11 大通路最高 8%',
-        note: '唐吉・BIC CAMERA・三越・7-11・全家・LAWSON・AEON（日幣請款）',
+        note: '唐吉・BIC CAMERA・三越・7-11・全家・LAWSON・AEON（日幣請款，上限600元/月）',
         specificKeywords: [
           '7-eleven', '7-11', 'familymart', '全家', 'lawson', '超商', '迪士尼', '環球影城', 'usj',
           'aeon', '永旺', '三越', '福岡三越', '高島屋', 'bic', 'yodobashi', '唐吉', 'apple pay', 'google pay', 'quicpay'
         ],
+        hasMinSpend: false,
         isGeneralJapan: true,
         generalRateScore: 5,
         generalRateLabel: '感應支付最高 5%（實體 2.5% 無上限）'
@@ -5044,8 +5030,31 @@
         shortName: '永豐幣倍卡 (MASTER)',
         rateScore: 6,
         rateLabel: '日本實體 & 交通卡最高 6%',
-        note: '懂匯等級＋外幣自動扣繳（加碼上限800元/月，刷2萬額滿）',
+        note: '懂匯等級＋外幣自動扣繳（加碼上限800元/月，刷2萬額滿，無低消）',
         specificKeywords: ['suica', '西瓜卡', 'icoca', 'pasmo', '交通卡', 'apple pay'],
+        hasMinSpend: false,
+        isGeneralJapan: true
+      },
+      {
+        id: 'cc-1',
+        shortName: '台新 Richart 卡 (VISA)',
+        // 6.2%加碼因每季上限僅50點(<150點)已排除，直接以真正無上限的 5.3% 參與排名！
+        rateScore: 5.3,
+        rateLabel: '5.3% 回饋無上限（已排除50點低上限加碼）',
+        note: 'Pay著刷方案超過50點小額加碼後，享 5.3% 回饋無上限（無低消）',
+        specificKeywords: ['pay著刷'],
+        hasMinSpend: false,
+        isGeneralJapan: true
+      },
+      {
+        id: 'cc-4',
+        shortName: '永豐現金回饋 JCB 卡',
+        // 滿萬10%有低消門檻已排除，僅採計無低消且上限300元/月(≥150元)的日本實體 5%
+        rateScore: 5,
+        rateLabel: '日本實體一般消費 5%（上限300元/月）',
+        note: '基本 2% 無上限 + 日本實體加碼 3%（滿萬10%有低消已排除）',
+        specificKeywords: ['日韓泰', '面對面'],
+        hasMinSpend: false,
         isGeneralJapan: true
       },
       {
@@ -5053,8 +5062,9 @@
         shortName: '永豐大戶卡 (VISA)',
         rateScore: 4.5,
         rateLabel: '日本實體消費最高 4.5%',
-        note: '大戶等級＋自動扣繳（加碼2.5%上限400元/月，刷1.6萬額滿）',
+        note: '大戶等級＋自動扣繳（加碼2.5%上限400元/月，刷1.6萬額滿，無低消）',
         specificKeywords: [],
+        hasMinSpend: false,
         isGeneralJapan: true
       },
       {
@@ -5062,8 +5072,9 @@
         shortName: '玉山 Unicard (VISA)',
         rateScore: 4.5,
         rateLabel: 'UP 選方案 4.5% 無上限',
-        note: '需於 Wallet 訂閱/切換「UP 選」，大額消費無上限主力卡',
+        note: '需於 Wallet 訂閱/切換「UP 選」，大額消費無上限主力卡（無低消）',
         specificKeywords: [],
+        hasMinSpend: false,
         isGeneralJapan: true
       },
       {
@@ -5073,7 +5084,19 @@
         rateLabel: '「趣旅行」3% 小樹點無上限',
         note: '免登錄無上限，當天 App 務必切換至「趣旅行」（含星野/東橫/交通卡）',
         specificKeywords: ['星野', '東橫', 'suica', 'icoca', 'pasmo', 'uber', '迪士尼', '環球影城'],
+        hasMinSpend: false,
         isGeneralJapan: true
+      },
+      {
+        id: 'cc-11',
+        shortName: '所有 VISA 卡 (不限銀行)',
+        // 單筆不含稅須滿 20,000 日圓才折 2,000，設有最低消費門檻，設為 true 自動排除於排行榜外
+        rateScore: 10,
+        rateLabel: '滿 2 萬日圓折 2,000（約 10%）',
+        note: 'COSMOS・鶴羽藥妝・杉藥局・國民藥妝・EDION（設有滿2萬日圓低消）',
+        specificKeywords: ['cosmos', '科摩思', '鶴羽', 'ツルハ', '杉藥局', '國民藥妝', '愛電王', 'edion', '藥妝'],
+        hasMinSpend: true,
+        isGeneralJapan: false
       }
     ];
 
@@ -5098,6 +5121,74 @@
         board.classList.add('hidden');
         return;
       }
+
+      // 計算每張卡針對當前搜尋關鍵字的適用分數（已排除低消與上限<150元/點之活動）
+      const scoredList = [];
+      CREDIT_CARD_RANK_RULES.forEach((rule) => {
+        if (rule.hasMinSpend) return;
+
+        // 精準比對該卡的指定通路關鍵字
+        const hitSpecificRule = rule.specificKeywords.some((s) => kw.includes(s) || s.includes(kw));
+
+        if (hitSpecificRule) {
+          scoredList.push({
+            id: rule.id,
+            shortName: rule.shortName,
+            score: rule.rateScore,
+            rateLabel: rule.rateLabel,
+            note: rule.note,
+            tag: '指定通路優惠'
+          });
+        } else if (rule.isGeneralJapan) {
+          // 未命中專屬通路時，採計「無低消且上限≥150的日本一般實體消費」趴數
+          scoredList.push({
+            id: rule.id,
+            shortName: rule.shortName,
+            score: rule.generalRateScore !== undefined ? rule.generalRateScore : rule.rateScore,
+            rateLabel: rule.generalRateLabel || rule.rateLabel,
+            note: rule.note,
+            tag: '日本一般通用'
+          });
+        }
+      });
+
+      // 依回饋趴數由高到低排序，取前 3 名
+      scoredList.sort((a, b) => b.score - a.score);
+      const top3 = scoredList.slice(0, 3);
+
+      if (titleEl) {
+        titleEl.textContent = `🏆 搜尋「${rawKeyword.trim()}」無低消＆高上限 Top 3`;
+      }
+
+      const medals = [
+        { icon: '🥇 最高', border: 'border-amber-400 bg-amber-50/90', badge: 'bg-amber-500 text-white' },
+        { icon: '🥈 第二', border: 'border-stone-300 bg-parchment/90', badge: 'bg-stone-500 text-white' },
+        { icon: '🥉 第三', border: 'border-orange-300 bg-orange-50/70', badge: 'bg-orange-600 text-white' }
+      ];
+
+      cardsContainer.innerHTML = top3
+        .map((item, idx) => {
+          const m = medals[idx];
+          return `
+            <button
+              type="button"
+              onclick="scrollToCreditCardRow('${item.id}')"
+              class="text-left p-2 rounded-xl border ${m.border} hover:shadow-sm active:scale-[0.98] transition flex flex-col justify-between gap-0.5"
+            >
+              <div class="flex items-center justify-between gap-1">
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md ${m.badge}">${m.icon}</span>
+                <span class="text-[10px] font-semibold text-inkMuted truncate">${item.tag}</span>
+              </div>
+              <div class="text-xs font-bold text-ink truncate mt-0.5">${escapeHtml(item.shortName)}</div>
+              <div class="text-[11px] font-extrabold text-maple leading-tight">${escapeHtml(item.rateLabel)}</div>
+              <div class="text-[10px] text-inkMuted line-clamp-1">${escapeHtml(item.note)}</div>
+            </button>
+          `;
+        })
+        .join('');
+
+      board.classList.remove('hidden');
+    }
 
       // 計算每張卡針對當前搜尋關鍵字的適用分數
       const scoredList = [];
@@ -5335,6 +5426,103 @@
       }
     }
 
+    // 讓收合後的小搜尋膠囊支援手機觸控與滑鼠自由拖曳移動
+    function initDraggableCollapsedBar() {
+      const bar = document.getElementById('ccSearchCollapsedBar');
+      if (!bar || bar.dataset.dragInit === '1') return;
+      bar.dataset.dragInit = '1';
+
+      let isDragging = false;
+      let hasMoved = false;
+      let startX = 0;
+      let startY = 0;
+      let initialLeft = 0;
+      let initialTop = 0;
+
+      function onDragStart(clientX, clientY) {
+        const rect = bar.getBoundingClientRect();
+        isDragging = true;
+        hasMoved = false;
+        startX = clientX;
+        startY = clientY;
+        initialLeft = rect.left;
+        initialTop = rect.top;
+
+        // 切換為 left / top 絕對視窗座標定位，方便自由移動
+        bar.style.right = 'auto';
+        bar.style.bottom = 'auto';
+        bar.style.left = `${initialLeft}px`;
+        bar.style.top = `${initialTop}px`;
+      }
+
+      function onDragMove(clientX, clientY, e) {
+        if (!isDragging) return;
+        const dx = clientX - startX;
+        const dy = clientY - startY;
+
+        // 移動超過 6px 才判定為拖曳，避免影響正常點擊按鈕
+        if (!hasMoved && Math.hypot(dx, dy) > 6) {
+          hasMoved = true;
+        }
+        if (!hasMoved) return;
+
+        if (e && e.cancelable) e.preventDefault();
+
+        const rect = bar.getBoundingClientRect();
+        const maxLeft = window.innerWidth - rect.width - 8;
+        const maxTop = window.innerHeight - rect.height - 8;
+
+        const nextLeft = Math.min(Math.max(8, initialLeft + dx), Math.max(8, maxLeft));
+        const nextTop = Math.min(Math.max(56, initialTop + dy), Math.max(56, maxTop));
+
+        bar.style.left = `${nextLeft}px`;
+        bar.style.top = `${nextTop}px`;
+      }
+
+      function onDragEnd() {
+        if (!isDragging) return;
+        isDragging = false;
+        if (hasMoved) {
+          // 剛拖曳結束時短暫攔截一次 click 事件，防止放開手指時誤觸展開或切換
+          const suppressClick = (ev) => {
+            ev.stopPropagation();
+            ev.preventDefault();
+          };
+          bar.addEventListener('click', suppressClick, { capture: true, once: true });
+          setTimeout(() => {
+            bar.removeEventListener('click', suppressClick, { capture: true });
+          }, 80);
+        }
+      }
+
+      // 手機觸控事件
+      bar.addEventListener('touchstart', (e) => {
+        if (e.touches.length !== 1) return;
+        onDragStart(e.touches[0].clientX, e.touches[0].clientY);
+      }, { passive: true });
+
+      window.addEventListener('touchmove', (e) => {
+        if (!isDragging || e.touches.length !== 1) return;
+        onDragMove(e.touches[0].clientX, e.touches[0].clientY, e);
+      }, { passive: false });
+
+      window.addEventListener('touchend', onDragEnd);
+      window.addEventListener('touchcancel', onDragEnd);
+
+      // 電腦滑鼠事件
+      bar.addEventListener('mousedown', (e) => {
+        if (e.button !== 0) return;
+        onDragStart(e.clientX, e.clientY);
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        onDragMove(e.clientX, e.clientY, e);
+      });
+
+      window.addEventListener('mouseup', onDragEnd);
+    }
+    
     function toggleCreditCardSearchBar(shouldCollapse) {
       const expandedCard = document.getElementById('ccSearchExpandedCard');
       const collapsedBar = document.getElementById('ccSearchCollapsedBar');
@@ -5346,6 +5534,7 @@
         if (spacer) spacer.classList.add('hidden');
         collapsedBar.classList.remove('hidden');
         syncCollapsedSearchBarUI();
+        initDraggableCollapsedBar(); // ← 加上這一行，啟動自由拖曳！
       } else {
         collapsedBar.classList.add('hidden');
         expandedCard.classList.remove('hidden');

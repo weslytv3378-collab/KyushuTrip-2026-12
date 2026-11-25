@@ -251,6 +251,15 @@
         </button>
         <button
           type="button"
+          data-tab="expenses"
+          onclick="switchTab('expenses')"
+          class="nav-tab-btn shrink-0 min-w-[82px] sm:min-w-0 min-h-[42px] px-2.5 sm:px-1.5 py-1.5 rounded-xl text-[11px] sm:text-sm font-bold tracking-tight transition flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 bg-woodcard text-inkMuted border border-woodBorder hover:bg-parchment"
+        >
+          <span>📒</span>
+          <span class="whitespace-nowrap">我的記帳本</span>
+        </button>
+        <button
+          type="button"
           data-tab="weather"
           onclick="switchTab('weather')"
           class="nav-tab-btn shrink-0 min-w-[82px] sm:min-w-0 min-h-[42px] px-2.5 sm:px-1.5 py-1.5 rounded-xl text-[11px] sm:text-sm font-bold tracking-tight transition flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 bg-woodcard text-inkMuted border border-woodBorder hover:bg-parchment"
@@ -266,15 +275,6 @@
         >
           <span>🛂</span>
           <span class="whitespace-nowrap">日本免稅新制</span>
-        </button>
-        <button
-          type="button"
-          data-tab="expenses"
-          onclick="switchTab('expenses')"
-          class="nav-tab-btn shrink-0 min-w-[82px] sm:min-w-0 min-h-[42px] px-2.5 sm:px-1.5 py-1.5 rounded-xl text-[11px] sm:text-sm font-bold tracking-tight transition flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 bg-woodcard text-inkMuted border border-woodBorder hover:bg-parchment"
-        >
-          <span>📒</span>
-          <span class="whitespace-nowrap">我的記帳本</span>
         </button>
       </nav>
     </div>
@@ -333,7 +333,8 @@
       </div>
 
       <!-- 置頂 (Sticky) PDF 尋找列與快捷商店膠囊（支援一鍵收合／展開） -->
-      <div id="ccStickySearchWrapper" class="sticky top-[102px] sm:top-[106px] z-20 transition-all">
+      <div id="ccStickySearchWrapper" class="sticky top-[114px] sm:top-[116px] z-20 transition-all">
+
         <!-- 【狀態 A：展開中的完整搜尋卡片】 -->
         <div id="ccSearchExpandedCard" class="storybook-card p-3 sm:p-4 bg-woodcard/95 backdrop-blur-md border-2 border-maple/35 shadow-md space-y-2.5">
           <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
@@ -412,18 +413,44 @@
         </div>
 
         <!-- 【狀態 B：收合後的迷你懸浮膠囊（幾乎不遮擋下方表格）】 -->
-        <div id="ccSearchCollapsedBar" class="hidden flex justify-end">
+                <!-- 【狀態 B：收合後的迷你懸浮膠囊（支援直接切換上/下一筆，展開才能輸入新搜尋）】 -->
+        <div id="ccSearchCollapsedBar" class="hidden flex items-center justify-end gap-1.5">
+          <!-- 有搜尋結果時才顯示的「筆數 + ▲ / ▼ 迷你切換控制組」 -->
+          <div id="ccCollapsedNavGroup" class="hidden inline-flex items-center gap-1 px-2 py-1 rounded-full bg-woodcard/95 backdrop-blur-md border-2 border-amber-400 shadow-md">
+            <span id="ccCollapsedCounter" class="text-[11px] font-bold text-amber-950 px-1.5">
+              1/1
+            </span>
+            <button
+              type="button"
+              id="ccCollapsedPrevBtn"
+              onclick="jumpCreditCardMatch(-1)"
+              title="上一筆相符結果"
+              class="w-6 h-6 rounded-full bg-parchment hover:bg-ginkgoLight/70 border border-woodBorder text-[11px] font-bold text-ink flex items-center justify-center active:scale-90 transition"
+            >
+              ▲
+            </button>
+            <button
+              type="button"
+              id="ccCollapsedNextBtn"
+              onclick="jumpCreditCardMatch(1)"
+              title="下一筆相符結果"
+              class="w-6 h-6 rounded-full bg-maple text-white text-[11px] font-bold flex items-center justify-center hover:bg-mapleDark active:scale-90 transition"
+            >
+              ▼
+            </button>
+          </div>
+
+          <!-- 展開搜尋列主按鈕 -->
           <button
             type="button"
             onclick="toggleCreditCardSearchBar(false)"
-            class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-woodcard/95 backdrop-blur-md border-2 border-maple/45 shadow-md text-xs font-bold text-maple hover:bg-parchment active:scale-95 transition"
+            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-woodcard/95 backdrop-blur-md border-2 border-maple/45 shadow-md text-xs font-bold text-maple hover:bg-parchment active:scale-95 transition"
           >
             <span>🔍</span>
-            <span id="ccCollapsedLabel">展開搜尋列</span>
+            <span id="ccCollapsedLabel">展開搜尋</span>
             <span>▾</span>
           </button>
         </div>
-      </div>
 
       <!-- 結構化 5 欄位信用卡回饋比較表 -->
       <div class="storybook-card overflow-hidden">
@@ -5053,23 +5080,44 @@
       updateCreditCardCounterUI();
     }
 
-        function toggleCreditCardSearchBar(shouldCollapse) {
+    function syncCollapsedSearchBarUI() {
+      const collapsedLabel = document.getElementById('ccCollapsedLabel');
+      const collapsedNavGroup = document.getElementById('ccCollapsedNavGroup');
+      const collapsedCounter = document.getElementById('ccCollapsedCounter');
+      const collapsedPrevBtn = document.getElementById('ccCollapsedPrevBtn');
+      const collapsedNextBtn = document.getElementById('ccCollapsedNextBtn');
+
+      const trimmed = ccSearchState.keyword.trim();
+      const total = ccSearchState.matches.length;
+
+      if (collapsedLabel) {
+        collapsedLabel.textContent = trimmed ? `展開「${trimmed}」` : '展開搜尋列';
+      }
+
+      if (!collapsedNavGroup) return;
+
+      // 只有在「有搜尋關鍵字 且 有找到結果」時，收合狀態才顯示 1/4 與 ▲ ▼ 切換鈕
+      if (trimmed && total > 0) {
+        collapsedNavGroup.classList.remove('hidden');
+        if (collapsedCounter) {
+          collapsedCounter.textContent = `${ccSearchState.currentIndex + 1}/${total}`;
+        }
+        if (collapsedPrevBtn) collapsedPrevBtn.disabled = false;
+        if (collapsedNextBtn) collapsedNextBtn.disabled = false;
+      } else {
+        collapsedNavGroup.classList.add('hidden');
+      }
+    }
+
+    function toggleCreditCardSearchBar(shouldCollapse) {
       const expandedCard = document.getElementById('ccSearchExpandedCard');
       const collapsedBar = document.getElementById('ccSearchCollapsedBar');
-      const collapsedLabel = document.getElementById('ccCollapsedLabel');
       if (!expandedCard || !collapsedBar) return;
 
       if (shouldCollapse) {
         expandedCard.classList.add('hidden');
         collapsedBar.classList.remove('hidden');
-
-        // 如果目前有輸入搜尋關鍵字，迷你膠囊會貼心顯示目前搜尋的字詞
-        const trimmed = ccSearchState.keyword.trim();
-        if (collapsedLabel) {
-          collapsedLabel.textContent = trimmed
-            ? `展開搜尋「${trimmed}」`
-            : '展開搜尋列';
-        }
+        syncCollapsedSearchBarUI();
       } else {
         collapsedBar.classList.add('hidden');
         expandedCard.classList.remove('hidden');
@@ -5083,6 +5131,9 @@
       const nextBtn = document.getElementById('ccNextBtn');
       const trimmed = ccSearchState.keyword.trim();
       const total = ccSearchState.matches.length;
+
+      // 同步更新收合膠囊上的筆數與按鈕狀態
+      syncCollapsedSearchBarUI();
 
       if (!actionBtn) return;
 
@@ -5151,7 +5202,7 @@
        ========================================================================== */
     function switchTab(tabName) {
       state.activeTab = tabName;
-      const tabs = ['itinerary', 'creditcard', 'weather', 'taxfree', 'expenses'];
+      const tabs = ['itinerary', 'creditcard', 'expenses', 'weather', 'taxfree'];
 
       tabs.forEach((t) => {
         const section = document.getElementById(`tab-${t}`);
